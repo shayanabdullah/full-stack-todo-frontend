@@ -104,11 +104,7 @@ export default function TaskOverview() {
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <button className="text-primary text-sm font-medium hover:underline">
-          View full report →
-        </button>
-      </div>
+      
     </div>
   );
 }

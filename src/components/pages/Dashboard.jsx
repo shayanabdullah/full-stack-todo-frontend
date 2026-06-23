@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { Calendar } from "../ui/calendar";
-import PieChartMy from './../PieChart';
+import PieChartMy from "./../PieChart";
+import TodoDisplay from "../TodoDisplay";
 
 const Dashboard = () => {
   const [date, setDate] = useState(new Date());
@@ -50,9 +51,9 @@ const Dashboard = () => {
   ];
   return (
     <div>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 justify-between gap-8">
         {/* LEFT */}
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 h-fit">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-semibold font-mono">
@@ -102,10 +103,15 @@ const Dashboard = () => {
               );
             })}
           </div>
+
+          {/* Todo Display */}
+          <div className="mt-12">
+            <TodoDisplay />
+          </div>
         </div>
 
         {/* RIGHT */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:col-span-3 h-fit space-y-5">
           {/* Calendar Card */}
           <div className="bg-card border rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -146,7 +152,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="">
-            <PieChartMy/>
+            <PieChartMy />
           </div>
         </div>
       </div>

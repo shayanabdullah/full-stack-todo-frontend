@@ -1,56 +1,469 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+import { AppSidebar } from "@/components/app-sidebar";
+
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Command, MenuIcon, Search } from "lucide-react"
-import { CiSearch } from "react-icons/ci"
-import { MdKeyboardCommandKey } from "react-icons/md"
-import { RiMenuFill } from "react-icons/ri"
-import { PremiumToggle } from "./ui/bouncy-toggle"
-import { Outlet } from "react-router"
-
+} from "@/components/ui/sidebar";
+import { CiSearch } from "react-icons/ci";
+import { MdKeyboardCommandKey } from "react-icons/md";
+import {
+  RiMenuFill,
+  RiCloseLine,
+  RiArrowUpLine,
+  RiArrowDownLine,
+} from "react-icons/ri";
+import { FiUser, FiBook, FiCalendar, FiFlag } from "react-icons/fi";
+import { PremiumToggle } from "./ui/bouncy-toggle";
+import { Outlet } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 export default function DashboardLayout() {
+  const searchInputRef = useRef(null);
+  const [searchModal, setSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const modalRef = useOutsideClick(() => setSearchModal(false));
+
+  const sampleTasks = [
+    {
+      id: 1,
+      title: "Finish React Assignment",
+      description: "Complete the todo app and submit before deadline",
+      priority: "high",
+      category: "Study",
+      date: "Jun 21, 2026",
+    },
+    {
+      id: 2,
+      title: "Build Portfolio Website",
+      description: "Add new projects and improve UI/UX design",
+      priority: "medium",
+      category: "Work",
+      date: "Jun 25, 2026",
+    },
+    {
+      id: 3,
+      title: "Project Meeting",
+      description: "Discuss project requirements with team",
+      priority: "medium",
+      category: "Work",
+      date: "Jun 18, 2026",
+    },
+    {
+      id: 4,
+      title: "Read 20 Pages",
+      description: "Atomic Habits by James Clear",
+      priority: "low",
+      category: "Study",
+      date: "Jun 17, 2026",
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: "Add New Task",
+      description: "Create a new task",
+      icon: "plus",
+      color: "purple",
+    },
+    {
+      label: "Today's Tasks",
+      description: "View tasks for today",
+      icon: "calendar",
+      color: "blue",
+    },
+    {
+      label: "Completed Tasks",
+      description: "View all completed",
+      icon: "check",
+      color: "green",
+    },
+    {
+      label: "Important Tasks",
+      description: "View high priority tasks",
+      icon: "flag",
+      color: "red",
+    },
+  ];
+
+  const recentSearches = [
+    "React assignment",
+    "Workout",
+    "Design system",
+    "Project meeting",
+    "Grocery shopping",
+  ];
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchModal(true);
+      }
+      if (event.key === "Escape") {
+        setSearchModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchModal && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchModal]);
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-600";
+      case "medium":
+        return "bg-orange-100 text-orange-600";
+      case "low":
+        return "bg-green-100 text-green-600";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case "Personal":
+        return <FiUser />;
+      case "Work":
+        return <FiBook />;
+      case "Study":
+        return <FiBook />;
+      case "Health":
+        return <FiFlag />;
+      default:
+        return <FiUser />;
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <header className="flex min-h-16 justify-between shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border py-3">
           <div className="px-4 flex items-center w-1/2 gap-x-5">
-            <SidebarTrigger className="ml-3" icon={<RiMenuFill />} iconClass={'text-2xl!'}  />
+            <SidebarTrigger
+              className="ml-3"
+              icon={<RiMenuFill />}
+              iconClass={"text-2xl!"}
+            />
             <div className="w-full relative">
-            <input type="text" placeholder="Search tasks" className="py-2.5 pl-8 w-full border border-accent-foreground/30 rounded-md font-mono text-sm" />
-            <i className="absolute top-1/2 left-2 -translate-y-1/2">
-              <CiSearch className=" text-lg"/>
-            </i>
-            <i className="absolute top-1/2 right-5 -translate-y-1/2 flex items-center text-muted-foreground text-sm">
-              <MdKeyboardCommandKey className=" text-base"/>K
-            </i>
+              <input
+                type="text"
+                placeholder="Search tasks"
+                onClick={() => setSearchModal(true)}
+                className="py-2.5 pl-8 w-full border border-accent-foreground/30 rounded-md font-mono text-sm cursor-pointer"
+              />
+              <i className="absolute top-1/2 left-2 -translate-y-1/2">
+                <CiSearch className=" text-lg" />
+              </i>
+              <i className="absolute top-1/2 right-5 -translate-y-1/2 flex items-center text-muted-foreground text-sm">
+                <MdKeyboardCommandKey className=" text-base" />K
+              </i>
             </div>
           </div>
           <div className="px-4 flex items-center">
-       <div className="">
-            <PremiumToggle defaultChecked={false}  />
-          </div>
+            <div className="">
+              <PremiumToggle defaultChecked={false} />
+            </div>
           </div>
         </header>
+        {
+          // Search Modal
+          searchModal && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20">
+              <div
+                ref={modalRef}
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Search Header */}
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-50 rounded-lg">
+                      <CiSearch className="text-xl text-gray-500" />
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search tasks, categories, or keywords..."
+                      className="flex-1 py-2 text-lg outline-none"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 flex items-center gap-1 px-2 py-1 bg-gray-50 rounded">
+                        <MdKeyboardCommandKey />K
+                      </span>
+                      <button
+                        onClick={() => setSearchModal(false)}
+                        className="p-2 hover:bg-gray-50 rounded-lg"
+                      >
+                        <RiCloseLine className="text-xl text-gray-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Modal Body */}
+                <div className="p-4 overflow-y-auto max-h-[55vh]">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left Column - Recent Searches & Results */}
+                    <div>
+                      {!searchQuery ? (
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-semibold text-gray-700">
+                              Recent Searches
+                            </h3>
+                            <button className="text-xs text-gray-500 hover:text-gray-700">
+                              Clear
+                            </button>
+                          </div>
+                          <div className="space-y-1">
+                            {recentSearches.map((search, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                              >
+                                <CiSearch className="text-gray-400" />
+                                <span className="text-sm text-gray-700">
+                                  {search}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex items-center gap-4 mb-4">
+                            <h3 className="text-sm font-semibold text-gray-700">
+                              Results
+                            </h3>
+                            <div className="flex gap-2">
+                              <span className="text-xs px-2 py-1 bg-violet-100 text-violet-700 rounded-full">
+                                All (24)
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                Tasks (18)
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                Categories (4)
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                Tags (2)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            {sampleTasks.map((task) => (
+                              <div
+                                key={task.id}
+                                className="p-3 border border-gray-100 rounded-lg hover:border-violet-200 hover:bg-violet-50/30 cursor-pointer transition-all"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-1">
+                                    <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-800 text-sm">
+                                      {task.title}
+                                    </h4>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {task.description}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <span
+                                        className={`text-xs px-2 py-0.5 rounded ${getPriorityColor(task.priority)}`}
+                                      >
+                                        {task.priority.charAt(0).toUpperCase() +
+                                          task.priority.slice(1)}
+                                      </span>
+                                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded flex items-center gap-1">
+                                        {getCategoryIcon(task.category)}{" "}
+                                        {task.category}
+                                      </span>
+                                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                                        <FiCalendar /> {task.date}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="w-8 h-8 rounded-full bg-violet-100 border-2 border-white shadow-sm" />
+                                </div>
+                              </div>
+                            ))}
+
+                            <div className="p-3 border-l-2 border-violet-400 bg-violet-50/50 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5">
+                                  <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center">
+                                    <svg
+                                      className="w-2.5 h-2.5 text-white"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="3"
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-800 text-sm">
+                                    Read 20 Pages
+                                  </h4>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Atomic Habits by James Clear
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">
+                                      Low
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded flex items-center gap-1">
+                                      <FiBook /> Study
+                                    </span>
+                                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                                      <FiCalendar /> Jun 17, 2026
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="p-3 border border-gray-100 rounded-lg hover:border-violet-200 hover:bg-violet-50/30 cursor-pointer transition-all">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-indigo-100 rounded-lg">
+                                    <FiBook className="text-indigo-600" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-gray-800 text-sm">
+                                      Study
+                                    </h4>
+                                    <p className="text-xs text-gray-500">
+                                      Category • 5 tasks
+                                    </p>
+                                  </div>
+                                </div>
+                                <RiArrowUpLine className="text-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column - Quick Actions */}
+                    {!searchQuery && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                          Quick Actions
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {quickActions.map((action, idx) => (
+                            <div
+                              key={idx}
+                              className="p-4 border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm cursor-pointer transition-all"
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
+                                  action.color === "purple"
+                                    ? "bg-violet-100 text-violet-600"
+                                    : action.color === "blue"
+                                      ? "bg-blue-100 text-blue-600"
+                                      : action.color === "green"
+                                        ? "bg-green-100 text-green-600"
+                                        : "bg-red-100 text-red-600"
+                                }`}
+                              >
+                                {action.icon === "plus" && (
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M12 4v16m8-8H4"
+                                    />
+                                  </svg>
+                                )}
+                                {action.icon === "calendar" && (
+                                  <FiCalendar className="w-4 h-4" />
+                                )}
+                                {action.icon === "check" && (
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="3"
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                )}
+                                {action.icon === "flag" && (
+                                  <FiFlag className="w-4 h-4" />
+                                )}
+                              </div>
+                              <h4 className="font-medium text-gray-800 text-sm">
+                                {action.label}
+                              </h4>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {action.description}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                      <RiArrowUpLine /> Navigate
+                    </span>
+                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                      <RiArrowDownLine />
+                    </span>
+                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                      esc Close
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
         <div className="flex flex-1 flex-col gap-4 p-4 py-10">
-         <Outlet/>
+          <Outlet />
         </div>
-        
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
