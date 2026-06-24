@@ -17,13 +17,11 @@ import { FiUser, FiBook, FiCalendar, FiFlag } from "react-icons/fi";
 import { PremiumToggle } from "./ui/bouncy-toggle";
 import { Outlet } from "react-router";
 import { useEffect, useRef, useState } from "react";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 export default function DashboardLayout() {
   const searchInputRef = useRef(null);
   const [searchModal, setSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const modalRef = useOutsideClick(() => setSearchModal(false));
 
   const sampleTasks = [
     {
@@ -122,13 +120,13 @@ export default function DashboardLayout() {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-600";
+        return "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400";
       case "medium":
-        return "bg-orange-100 text-orange-600";
+        return "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400";
       case "low":
-        return "bg-green-100 text-green-600";
+        return "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
     }
   };
 
@@ -182,17 +180,16 @@ export default function DashboardLayout() {
         {
           // Search Modal
           searchModal && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20">
+            <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-start justify-center pt-20" onClick={() => setSearchModal(false)}>
               <div
-                ref={modalRef}
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
+                className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] overflow-hidden"
+                
               >
                 {/* Search Header */}
-                <div className="p-4 border-b border-gray-100">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-50 rounded-lg">
-                      <CiSearch className="text-xl text-gray-500" />
+                    <div className="p-2 bg-muted rounded-lg">
+                      <CiSearch className="text-xl text-muted-foreground" />
                     </div>
                     <input
                       ref={searchInputRef}
@@ -200,17 +197,17 @@ export default function DashboardLayout() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search tasks, categories, or keywords..."
-                      className="flex-1 py-2 text-lg outline-none"
+                      className="flex-1 py-2 text-lg outline-none bg-transparent"
                     />
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 flex items-center gap-1 px-2 py-1 bg-gray-50 rounded">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 px-2 py-1 bg-muted rounded">
                         <MdKeyboardCommandKey />K
                       </span>
                       <button
                         onClick={() => setSearchModal(false)}
-                        className="p-2 hover:bg-gray-50 rounded-lg"
+                        className="p-2 hover:bg-muted rounded-lg"
                       >
-                        <RiCloseLine className="text-xl text-gray-500" />
+                        <RiCloseLine className="text-xl text-muted-foreground" />
                       </button>
                     </div>
                   </div>
@@ -224,10 +221,10 @@ export default function DashboardLayout() {
                       {!searchQuery ? (
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-semibold text-gray-700">
+                            <h3 className="text-sm font-semibold text-card-foreground">
                               Recent Searches
                             </h3>
-                            <button className="text-xs text-gray-500 hover:text-gray-700">
+                            <button className="text-xs text-muted-foreground hover:text-card-foreground">
                               Clear
                             </button>
                           </div>
@@ -235,10 +232,10 @@ export default function DashboardLayout() {
                             {recentSearches.map((search, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                                className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg cursor-pointer"
                               >
-                                <CiSearch className="text-gray-400" />
-                                <span className="text-sm text-gray-700">
+                                <CiSearch className="text-muted-foreground" />
+                                <span className="text-sm text-card-foreground">
                                   {search}
                                 </span>
                               </div>
@@ -248,20 +245,20 @@ export default function DashboardLayout() {
                       ) : (
                         <div>
                           <div className="flex items-center gap-4 mb-4">
-                            <h3 className="text-sm font-semibold text-gray-700">
+                            <h3 className="text-sm font-semibold text-card-foreground">
                               Results
                             </h3>
                             <div className="flex gap-2">
-                              <span className="text-xs px-2 py-1 bg-violet-100 text-violet-700 rounded-full">
+                              <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
                                 All (24)
                               </span>
-                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                              <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
                                 Tasks (18)
                               </span>
-                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                              <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
                                 Categories (4)
                               </span>
-                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                              <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
                                 Tags (2)
                               </span>
                             </div>
@@ -270,17 +267,17 @@ export default function DashboardLayout() {
                             {sampleTasks.map((task) => (
                               <div
                                 key={task.id}
-                                className="p-3 border border-gray-100 rounded-lg hover:border-violet-200 hover:bg-violet-50/30 cursor-pointer transition-all"
+                                className="p-3 border border-border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 cursor-pointer transition-all"
                               >
                                 <div className="flex items-start gap-3">
                                   <div className="mt-1">
-                                    <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
+                                    <div className="w-4 h-4 rounded-full border-2 border-muted-foreground" />
                                   </div>
                                   <div className="flex-1">
-                                    <h4 className="font-medium text-gray-800 text-sm">
+                                    <h4 className="font-medium text-card-foreground text-sm">
                                       {task.title}
                                     </h4>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                       {task.description}
                                     </p>
                                     <div className="flex items-center gap-2 mt-2">
@@ -290,21 +287,21 @@ export default function DashboardLayout() {
                                         {task.priority.charAt(0).toUpperCase() +
                                           task.priority.slice(1)}
                                       </span>
-                                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded flex items-center gap-1">
+                                      <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded flex items-center gap-1">
                                         {getCategoryIcon(task.category)}{" "}
                                         {task.category}
                                       </span>
-                                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground flex items-center gap-1">
                                         <FiCalendar /> {task.date}
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="w-8 h-8 rounded-full bg-violet-100 border-2 border-white shadow-sm" />
+                                  <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 border-2 border-card shadow-sm" />
                                 </div>
                               </div>
                             ))}
 
-                            <div className="p-3 border-l-2 border-violet-400 bg-violet-50/50 rounded-lg">
+                            <div className="p-3 border-l-2 border-purple-400 dark:border-purple-600 bg-purple-50/50 dark:bg-purple-900/30 rounded-lg">
                               <div className="flex items-start gap-3">
                                 <div className="mt-0.5">
                                   <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center">
@@ -324,20 +321,20 @@ export default function DashboardLayout() {
                                   </div>
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-medium text-gray-800 text-sm">
+                                  <h4 className="font-medium text-card-foreground text-sm">
                                     Read 20 Pages
                                   </h4>
-                                  <p className="text-xs text-gray-500 mt-1">
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     Atomic Habits by James Clear
                                   </p>
                                   <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">
+                                    <span className="text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                                       Low
                                     </span>
-                                    <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded flex items-center gap-1">
+                                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded flex items-center gap-1">
                                       <FiBook /> Study
                                     </span>
-                                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                                       <FiCalendar /> Jun 17, 2026
                                     </span>
                                   </div>
@@ -345,22 +342,22 @@ export default function DashboardLayout() {
                               </div>
                             </div>
 
-                            <div className="p-3 border border-gray-100 rounded-lg hover:border-violet-200 hover:bg-violet-50/30 cursor-pointer transition-all">
+                            <div className="p-3 border border-border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 cursor-pointer transition-all">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="p-2 bg-indigo-100 rounded-lg">
-                                    <FiBook className="text-indigo-600" />
+                                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                    <FiBook className="text-indigo-600 dark:text-indigo-400" />
                                   </div>
                                   <div>
-                                    <h4 className="font-medium text-gray-800 text-sm">
+                                    <h4 className="font-medium text-card-foreground text-sm">
                                       Study
                                     </h4>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-muted-foreground">
                                       Category • 5 tasks
                                     </p>
                                   </div>
                                 </div>
-                                <RiArrowUpLine className="text-gray-400" />
+                                <RiArrowUpLine className="text-muted-foreground" />
                               </div>
                             </div>
                           </div>
@@ -371,24 +368,24 @@ export default function DashboardLayout() {
                     {/* Right Column - Quick Actions */}
                     {!searchQuery && (
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                        <h3 className="text-sm font-semibold text-card-foreground mb-3">
                           Quick Actions
                         </h3>
                         <div className="grid grid-cols-2 gap-3">
                           {quickActions.map((action, idx) => (
                             <div
                               key={idx}
-                              className="p-4 border border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-sm cursor-pointer transition-all"
+                              className="p-4 border border-border rounded-xl hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm cursor-pointer transition-all"
                             >
                               <div
                                 className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
                                   action.color === "purple"
-                                    ? "bg-violet-100 text-violet-600"
+                                    ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
                                     : action.color === "blue"
-                                      ? "bg-blue-100 text-blue-600"
+                                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                                       : action.color === "green"
-                                        ? "bg-green-100 text-green-600"
-                                        : "bg-red-100 text-red-600"
+                                        ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                                        : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                                 }`}
                               >
                                 {action.icon === "plus" && (
@@ -428,10 +425,10 @@ export default function DashboardLayout() {
                                   <FiFlag className="w-4 h-4" />
                                 )}
                               </div>
-                              <h4 className="font-medium text-gray-800 text-sm">
+                              <h4 className="font-medium text-card-foreground text-sm">
                                 {action.label}
                               </h4>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {action.description}
                               </p>
                             </div>
@@ -443,15 +440,15 @@ export default function DashboardLayout() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 px-2 py-1 border border-border rounded">
                       <RiArrowUpLine /> Navigate
                     </span>
-                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                    <span className="flex items-center gap-1 px-2 py-1 border border-border rounded">
                       <RiArrowDownLine />
                     </span>
-                    <span className="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded">
+                    <span className="flex items-center gap-1 px-2 py-1 border border-border rounded">
                       esc Close
                     </span>
                   </div>

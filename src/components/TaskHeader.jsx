@@ -31,7 +31,7 @@ const TaskHeader = () => {
   };
 
   const selectOption = (dropdown, option) => {
-    switch (dropdown) {
+    switch (dropdown) { 
       case "status":
         setStatus(option);
         break;

@@ -11,9 +11,11 @@ import React, { useState } from "react";
 import { Calendar } from "../ui/calendar";
 import PieChartMy from "./../PieChart";
 import TodoDisplay from "../TodoDisplay";
+import AddNewTask from "../AddNewTask";
 
 const Dashboard = () => {
   const [date, setDate] = useState(new Date());
+  const [isOpen, setIsOpen] = useState(false);
 
   const stats = [
     {
@@ -57,7 +59,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-semibold font-mono">
-                Good morning, Shayan! 👋
+                Hey, Shayan! 👋
               </h1>
 
               <p className="text-muted-foreground mt-2 text-sm">
@@ -65,7 +67,7 @@ const Dashboard = () => {
               </p>
             </div>
 
-            <button className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-xl hover:opacity-90 transition">
+            <button onClick={()=> setIsOpen(true)} className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-xl hover:opacity-90 transition cursor-pointer">
               <Plus size={18} />
               Add Task
             </button>
@@ -156,6 +158,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      {
+        isOpen && <AddNewTask isOpen={isOpen} setIsOpen={setIsOpen} />
+      }
     </div>
   );
 };
