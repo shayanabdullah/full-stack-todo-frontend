@@ -1,13 +1,179 @@
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { RiCloseLine, RiLoader4Line } from "react-icons/ri";
+import toast from "react-hot-toast";
+import { ShowToast } from "@/utils/showToast";
 
-import { RiCloseLine } from "react-icons/ri";
+const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
+  const [taskData, setTaskData] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    dueDate: "",
+    category: "",
+    status: "pending",
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-const AddNewTask = ({ isOpen, setIsOpen }) => {
   if (!isOpen) return null;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  const validateField = (name, value) => {
+    let error = "";
+    if (name === "title" && !value.trim()) {
+      error = "Task title is required";
+    }
+    if (name === "description" && !value.trim()) {
+      error = "Description is required";
+    }
+    if (name === "dueDate" && !value) {
+      error = "Due date is required";
+    }
+    return error;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setTaskData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    if (error) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: error,
+      }));
+    }
+  };
+
+  const { getToken, isLoaded } = useAuth();
+
+  const handleAdd = async () => {
+    const newErrors = {};
+    ["title", "description", "dueDate"].forEach((field) => {
+      const error = validateField(field, taskData[field]);
+      if (error) {
+        newErrors[field] = error;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setIsLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    if (!isLoaded) return;
+  const token = await getToken();
+
+  if (editingTask) {
+    const res = await axios.post(
+      `${backendUrl}/task/edit/${editingTask._id}`,
+      taskData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (res.data.success) {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task._id === editingTask._id
+            ? res.data.todo
+            : task
+        ))
+        toast.custom((t) => (
+  <ShowToast
+    t={t}
+    type="success"
+    title="Task Updated"
+    message="Your changes have been saved successfully."
+  />
+));
+    }
+  } else {
+    const res = await axios.post(
+      `${backendUrl}/create/todo`,
+      taskData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (res.data.success) {
+      setTasks((prev) => [res.data.todo, ...prev]);
+    }
+  }
+  
+
+  await fetch();
+  setIsOpen(false);
+  toast.custom((t) => (
+  <ShowToast
+    t={t}
+    type="success"
+    title="Task Created"
+    message="Your new task has been added successfully."
+  />
+));
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setTaskData({
+      title: "",
+      description: "",
+      priority: "medium",
+      dueDate: "",
+      category: "",
+      status: "pending",
+    });
+    setErrors({});
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+  if (editingTask) {
+    setTaskData({
+      title: editingTask.title,
+      description: editingTask.description,
+      priority: editingTask.priority,
+      dueDate: editingTask.dueDate?.split("T")[0],
+      category: editingTask.category,
+      status: editingTask.status,
+    });
+  }
+}, [editingTask]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-20 " onClick={() => setIsOpen(false)} />
-         <div className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-30">
+    <>
+      <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 z-20 "
+          onClick={handleClose}
+        />
+        <div className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-30">
           {/* Task Header */}
           <div className="p-5 border-b border-border flex items-center justify-between">
             <div>
@@ -17,8 +183,9 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
               </p>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              onClick={handleClose}
+              disabled={isLoading}
+              className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RiCloseLine className="text-xl text-muted-foreground" />
             </button>
@@ -30,7 +197,7 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
             <div className="grid grid-cols-2 gap-x-4">
               <div className="flex flex-col gap-y-2">
                 <label
-                  htmlFor="task"
+                  htmlFor="title"
                   className="font-medium text-foreground text-sm"
                 >
                   Task Title{" "}
@@ -38,11 +205,24 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 </label>
                 <input
                   type="text"
-                  name="task"
-                  id="task"
+                  value={taskData.title}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="title"
+                  id="title"
                   placeholder="Enter task title..."
-                  className="py-3 px-3 rounded-sm text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  disabled={isLoading}
+                  className={`py-2.5 px-3 rounded-lg text-sm border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    errors.title
+                      ? "border-destructive focus:ring-destructive/20"
+                      : "border-input focus:ring-ring"
+                  }`}
                 />
+                {errors.title && (
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.title}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-y-2">
@@ -54,7 +234,11 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 </label>
                 <select
                   id="category"
-                  className="py-3 px-3 rounded-sm text-sm border border-input bg-background text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer"
+                  value={taskData.category}
+                  onChange={handleChange}
+                  name="category"
+                  disabled={isLoading}
+                  className="py-2.5 px-3 rounded-lg text-sm border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Select category</option>
                   <option value="personal">Personal</option>
@@ -72,22 +256,34 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 className="font-medium text-foreground text-sm"
               >
                 Description
-                  <span className="text-destructive font-bold">*</span>
+                <span className="text-destructive font-bold">*</span>
               </label>
               <textarea
+                value={taskData.description}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                name="description"
                 id="description"
-                rows="5"
+                rows="3"
                 maxLength={80}
                 placeholder="Add task description..."
-                className="py-3 px-3 rounded-sm text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize-none"
+                disabled={isLoading}
+                className={`py-2.5 px-3 rounded-lg text-sm border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                  errors.description
+                    ? "border-destructive focus:ring-destructive/20"
+                    : "border-input focus:ring-ring"
+                }`}
               />
+              {errors.description && (
+                <p className="text-xs text-destructive mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* Second Row: Priority & Status */}
             <div className="grid grid-cols-2 gap-x-4">
-              <div className="flex flex-col gap-y-2 relative">
-                
-                  <span className="absolute top-[60%] left-3 w-3 h-3 rounded-full bg-(--stat-red-icon) z-10"/>
+              <div className="flex flex-col gap-y-2">
                 <label
                   htmlFor="priority"
                   className="font-medium text-foreground text-sm"
@@ -96,7 +292,11 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 </label>
                 <select
                   id="priority"
-                  className="py-3 px-7 rounded-sm text-sm border border-input bg-background text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer"
+                  value={taskData.priority}
+                  onChange={handleChange}
+                  name="priority"
+                  disabled={isLoading}
+                  className="py-2.5 px-3 rounded-lg text-sm border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
@@ -104,19 +304,21 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 </select>
               </div>
 
-              <div className="flex flex-col gap-y-2 relative">
+              <div className="flex flex-col gap-y-2">
                 <label
                   htmlFor="status"
                   className="font-medium text-foreground text-sm"
                 >
                   Status
                 </label>
-                  <span className="absolute top-[60%] left-3 w-3 h-3 rounded-full bg-(--stat-blue-icon) z-10"/>
                 <select
                   id="status"
-                  className="py-3 px-7 rounded-sm text-sm border border-input bg-background text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer"
+                  value={taskData.status}
+                  onChange={handleChange}
+                  name="status"
+                  disabled={isLoading}
+                  className="py-2.5 px-3 rounded-lg text-sm border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  
                   <option value="pending">To Do</option>
                   <option value="completed">Completed</option>
                 </select>
@@ -129,34 +331,59 @@ const AddNewTask = ({ isOpen, setIsOpen }) => {
                 htmlFor="dueDate"
                 className="font-medium text-foreground text-sm"
               >
-                Due Date
+                Due Date <span className="text-destructive font-bold">*</span>
               </label>
               <div className="relative">
                 <input
                   type="date"
                   id="dueDate"
-                  className="w-full py-2.5 px-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  value={taskData.dueDate}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="dueDate"
+                  disabled={isLoading}
+                  className={`w-full py-2.5 px-3 rounded-lg border bg-background text-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    errors.dueDate
+                      ? "border-destructive focus:ring-destructive/20"
+                      : "border-input focus:ring-ring"
+                  }`}
                 />
-             
               </div>
+              {errors.dueDate && (
+                <p className="text-xs text-destructive mt-1">
+                  {errors.dueDate}
+                </p>
+              )}
             </div>
-
           </div>
 
           {/* Footer */}
           <div className="p-5 border-t border-border flex items-center justify-end gap-3">
             <button
-              onClick={() => setIsOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              onClick={handleClose}
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               Cancel
             </button>
-            <button className="px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
-              Create Task
+            <button
+              onClick={handleAdd}
+              disabled={isLoading}
+              className="px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isLoading ? (
+                <>
+                  <RiLoader4Line className="animate-spin" />
+                 { editingTask ? "Updating Task ..." : "Creating Task..."}
+                </>
+              ) : (
+               editingTask ? "Update Task" : "Create Task"
+              )}
             </button>
           </div>
         </div>
-    </div>
+      </div>
+    </>
   );
 };
 

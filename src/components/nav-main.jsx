@@ -6,35 +6,41 @@ import {
   SidebarMenuItem,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar"
+import {  NavLink } from "react-router"
 
 export function NavMain({ title, items }) {
-  return (
-<SidebarGroup>
-  {title && (
-    <SidebarGroupLabel className="uppercase text-xs font-semibold text-muted-foreground">
-      {title}
-    </SidebarGroupLabel>
-  )}
+  return (   
+     <SidebarGroup>
+      {title && (
+        <SidebarGroupLabel>
+          {title}
+        </SidebarGroupLabel>
+      )}
 
-  <SidebarMenu>
-    {items.map((item) => (
-      <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton
-          isActive={item.isActive}
-          tooltip={item.title}
-        >
-          {item.icon}
-          <span>{item.title}</span>
+      <SidebarMenu>
+        {items.map((item) => (
+          <SidebarMenuItem key={item.title}>
+            <NavLink to={item.url}>
+              {({ isActive }) => (
+                <SidebarMenuButton
+                  isActive={isActive}
+                  tooltip={item.title}
+                >
+                  {item.icon}
+                  <span>{item.title}</span>
 
-          {item.badge && (
-            <SidebarMenuBadge>
-              {item.badge}
-            </SidebarMenuBadge>
-          )}
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    ))}
-  </SidebarMenu>
-</SidebarGroup>
+                  {item.badge && (
+                    <SidebarMenuBadge>
+                      {item.badge}
+                    </SidebarMenuBadge>
+                  )}
+                </SidebarMenuButton>
+              )}
+            </NavLink>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+
   )
 }

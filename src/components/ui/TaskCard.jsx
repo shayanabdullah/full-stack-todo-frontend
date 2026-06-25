@@ -8,13 +8,15 @@ import { Edit, Trash2 } from "lucide-react";
 import { useOutsideClick } from "../../hooks/useOutsideClick";
 
 const TaskCard = ({
+  id,
+  onDelete,
+  onEdit,
   title,
   description,
   status,
   priority,
   category,
   date,
-  onToggleStatus,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -50,7 +52,6 @@ const TaskCard = ({
         <div className="flex gap-3 items-start">
           <div className="mt-1">
             <button
-              onClick={onToggleStatus}
               className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
                 status === "completed"
                   ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
@@ -139,11 +140,19 @@ const TaskCard = ({
           {isMenuOpen && (
             <div className="absolute top-full right-0 mt-2 w-40 bg-background border rounded-lg shadow-xl z-50">
               <div className="p-1">
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md">
+                <button
+                  onClick={() => {
+                    onEdit();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md"
+                >
                   <Edit size={16} />
                   Edit
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                <button
+                  onClick={onDelete}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                >
                   <Trash2 size={16} />
                   Delete
                 </button>

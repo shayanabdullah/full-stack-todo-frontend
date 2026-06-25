@@ -5,19 +5,21 @@ import { useOutsideClick } from "../hooks/useOutsideClick";
 import AllTasks from "./AllTasks";
 import TaskHeader from "./TaskHeader";
 
-const TodoDisplay = () => {
-
-
+const TodoDisplay = ({ fetch, tasks, setTasks, setEditingTask, setIsOpen }) => {
   return (
     <div className="space-y-4">
       <div className="w-full p-5 border rounded-xl shadow bg-card relative">
-        {/* Search, filter , Sort */}
-     <TaskHeader/>
+        <TaskHeader />
       </div>
 
-      {/* Tasks List */}
-      <div className="">
-       <AllTasks/>
+      <div>
+        <AllTasks
+          fetch={fetch}
+          setTasks={setTasks}
+          tasks={tasks}
+          setEditingTask={setEditingTask}
+          setIsOpen={setIsOpen}
+        />
       </div>
     </div>
   );

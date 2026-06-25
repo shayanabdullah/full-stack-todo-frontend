@@ -171,7 +171,9 @@
     @apply font-sans;
     }
 }
-
+button{
+  cursor: pointer;
+}
 @layer components {
   .card-purple {
     background: var(--stat-purple-bg);
@@ -188,4 +190,44 @@
   .card-red {
     background: var(--stat-red-bg);
   }
+}
+
+.cl-internal-fqc41u {
+    width: 100%  !important;
+}
+
+.cl-internal-mkizyn {
+    width: 100% !important;
+    height: 100% !important;
+   
+}
+
+@keyframes custom-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes custom-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+}
+
+.animate-custom-enter {
+  animation: custom-enter 0.25s ease forwards;
+}
+
+.animate-custom-leave {
+  animation: custom-leave 0.2s ease forwards;
 }
