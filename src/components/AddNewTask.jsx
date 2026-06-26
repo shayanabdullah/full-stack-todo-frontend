@@ -3,7 +3,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { RiCloseLine, RiLoader4Line } from "react-icons/ri";
 import toast from "react-hot-toast";
-import { ShowToast } from "@/utils/showToast";
+import { ShowToast } from "@/utils/ShowToast";
 
 const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
   const [taskData, setTaskData] = useState({

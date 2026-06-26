@@ -3,7 +3,7 @@ import TaskCard from "./ui/TaskCard";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
-import { ShowToast } from "@/utils/showToast";
+import { ShowToast } from "@/utils/ShowToast";
 
 const AllTasks = ({ tasks, setTasks, fetch, setEditingTask, setIsOpen }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
