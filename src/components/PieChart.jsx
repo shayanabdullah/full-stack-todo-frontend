@@ -1,37 +1,33 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { useState } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 
-const data = [
-  {
-    name: "High",
-    value: 4,
-    color: "#ff4d5a",
-  },
-  {
-    name: "Medium",
-    value: 8,
-    color: "#f5a623",
-  },
-  {
-    name: "Low",
-    value: 12,
-    color: "#4cd964",
-  },
-];
+export default function TaskOverview({ statsData }) {
+ 
+const high = statsData?.filter((task) => task.priority === "high").length || 0;
+const medium = statsData?.filter((task) => task.priority === "medium").length || 0;
+const low = statsData?.filter((task) => task.priority === "low").length || 0;
 
-const total = data.reduce((acc, item) => acc + item.value, 0);
-
-export default function TaskOverview() {
+    const data = [
+    {
+      name: "High",
+      value: high,
+      color: "#ff4d5a",
+    },
+    {
+      name: "Medium",
+      value: medium,
+      color: "#f5a623",
+    },
+    {
+      name: "Low",
+      value: low,
+      color: "#4cd964",
+    },
+  ];
+  const totalTasks = high + low + medium
   return (
     <div className="bg-card border rounded-2xl p-6">
-      <h3 className="font-semibold text-lg mb-4">
-        Task Overview
-      </h3>
+      <h3 className="font-semibold text-lg mb-4">Task Distribution</h3>
 
       <div className="flex items-center justify-between">
         {/* Chart */}
@@ -47,10 +43,7 @@ export default function TaskOverview() {
                 stroke="none"
               >
                 {data.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={entry.color}
-                  />
+                  <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
 
@@ -62,12 +55,8 @@ export default function TaskOverview() {
                 dominantBaseline="middle"
                 className="fill-foreground"
               >
-                <tspan
-                  x="50%"
-                  dy="0"
-                  className="text-2xl font-bold"
-                >
-                  {total}
+                <tspan x="50%" dy="0" className="text-2xl font-bold">
+                  {totalTasks}
                 </tspan>
 
                 <tspan
@@ -85,10 +74,7 @@ export default function TaskOverview() {
         {/* Legend */}
         <div className="space-y-4">
           {data.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center gap-3"
-            >
+            <div key={item.name} className="flex items-center gap-3">
               <div
                 className="size-3 rounded-full"
                 style={{
@@ -103,8 +89,6 @@ export default function TaskOverview() {
           ))}
         </div>
       </div>
-
-      
     </div>
   );
 }

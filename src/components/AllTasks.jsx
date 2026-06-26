@@ -51,7 +51,7 @@ const AllTasks = ({ tasks, setTasks, fetch, setEditingTask, setIsOpen }) => {
       ) : (
         <div className="main grid grid-cols-1 md:grid-cols-2 gap-x-8">
           {/* Todo List */}
-          <div className="w-full p-4 rounded-xl border bg-card shadow-sm">
+          <div className="w-full p-4 rounded-xl border bg-card shadow-sm ">
             {/* header */}
             <div className="pb-4 flex items-center gap-x-2">
               <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" />
@@ -86,7 +86,7 @@ const AllTasks = ({ tasks, setTasks, fetch, setEditingTask, setIsOpen }) => {
             </div>
           </div>
           {/* Completed Tasks */}
-          <div className="w-full p-4 rounded-xl border bg-card shadow-sm">
+          <div className="w-full p-4 rounded-xl border bg-card shadow-sm ">
             {/* header */}
             <div className="pb-4 flex items-center gap-x-2">
               <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
@@ -100,21 +100,27 @@ const AllTasks = ({ tasks, setTasks, fetch, setEditingTask, setIsOpen }) => {
               {completedTasks.map((task) => (
                 <TaskCard
                   key={task._id}
+                  id={task._id}
+                  onDelete={() => deleteTask(task._id)}
+                  onEdit={() => {
+                    setEditingTask(task);
+                    setIsOpen(true);
+                  }}
                   title={task.title}
                   description={task.description}
                   status={task.status}
                   priority={task.priority}
                   category={task.category}
-                  date={task.date}
-                  onEdit={() => {
-                    setEditingTask(task);
-                    setIsOpen(true);
-                  }}
+                  date={new Date(task.dueDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 />
               ))}
             </div>
             {completedTasks.length === 0 && (
-              <div className="text-center w-full h-full flex items-center justify-center text-lg text-gray-500">
+              <div className="text-center w-full h-full flex items-start justify-center text-lg text-gray-500 pt-20">
                 No completed tasks yet.
               </div>
             )}
