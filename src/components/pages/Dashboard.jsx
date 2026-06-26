@@ -28,6 +28,9 @@ const Dashboard = () => {
   });
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
+  const [weeklyData, setWeeklyData] = useState([]);
+
+
   const stats = [
     {
       title: "Total Tasks",
@@ -74,6 +77,7 @@ const Dashboard = () => {
       },
     });
     setStatsData(res?.data?.stats);
+setWeeklyData(res.data.weeklyData);
   };
 
   const getAllTask = async () => {
@@ -198,7 +202,7 @@ const Dashboard = () => {
 
           {/* Progress Card */}
           <div className="">
-          <AreaChartComp/>
+          <AreaChartComp data={weeklyData}/>
           </div>
 
           {/* donut Chart */}

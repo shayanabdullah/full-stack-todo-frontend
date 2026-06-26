@@ -17,8 +17,10 @@ const TaskCard = ({
   priority,
   category,
   date,
+  onToggle,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const categoryicon = {
     Personal: <IoPersonOutline />,
@@ -45,6 +47,16 @@ const TaskCard = ({
     if (isMenuOpen) setIsMenuOpen(false);
   });
 
+  const toggleTodo = async () => {
+    setLoading(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    await onToggle();
+
+    setLoading(false);
+  };
+
   return (
     <div className="w-full border rounded-xl p-4 bg-card shadow-sm hover:shadow-md transition-all">
       {/* header */}
@@ -52,23 +64,28 @@ const TaskCard = ({
         <div className="flex gap-3 items-start">
           <div className="mt-1">
             <button
+              onClick={toggleTodo}
               className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
                 status === "completed"
-                  ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
-                  : "border-gray-300 hover:border-primary hover:bg-primary/10"
+                  ? "bg-green-500 border-green-500 text-white"
+                  : "border-gray-300"
               }`}
             >
-              {status === "completed" && (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                >
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+              {loading ? (
+                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                status === "completed" && (
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                )
               )}
             </button>
           </div>
