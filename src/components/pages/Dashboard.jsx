@@ -77,7 +77,7 @@ const Dashboard = () => {
       fetchTodos();
       getAllTask();
     }
-  }, [isLoaded]);
+  }, []);
 
   return (
     <div>

@@ -13,57 +13,28 @@ import { useEffect, useRef, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import AddNewTask from "./AddNewTask";
 import { useTodo } from "@/context/TodoContext";
+import useDebounce from "@/hooks/useDebounce";
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 const Navbar = () => {
   const searchInputRef = useRef(null);
   const [searchModal, setSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [search, setSearch] = useState("");
   const [searchHistory, setSearchHistory] = useState([]);
-  const {isOpen, setIsOpen} = useTodo()
+  const [searchResult, setSearchResult] = useState([]);
 
-  const sampleTasks = [
-    {
-      id: 1,
-      title: "Finish React Assignment",
-      description: "Complete the todo app and submit before deadline",
-      priority: "high",
-      category: "Study",
-      date: "Jun 21, 2026",
-    },
-    {
-      id: 2,
-      title: "Build Portfolio Website",
-      description: "Add new projects and improve UI/UX design",
-      priority: "medium",
-      category: "Work",
-      date: "Jun 25, 2026",
-    },
-    {
-      id: 3,
-      title: "Project Meeting",
-      description: "Discuss project requirements with team",
-      priority: "medium",
-      category: "Work",
-      date: "Jun 18, 2026",
-    },
-    {
-      id: 4,
-      title: "Read 20 Pages",
-      description: "Atomic Habits by James Clear",
-      priority: "low",
-      category: "Study",
-      date: "Jun 17, 2026",
-    },
-  ];
+  const { isOpen, setIsOpen, backendUrl } = useTodo();
 
-  
   const quickActions = [
     {
       label: "Add New Task",
       description: "Create a new task",
       icon: "plus",
       color: "purple",
-      onClick : () => setIsOpen(true)
+      onClick: () => {
+        setSearchModal(false);
+        setIsOpen(true);
+      },
     },
     {
       label: "Today's Tasks",
@@ -144,6 +115,37 @@ const Navbar = () => {
         return <FiUser />;
     }
   };
+
+  const handleChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+  const debounceSearch = useDebounce(searchQuery);
+
+const getSearch = async () => {
+  if (!isLoaded || !debounceSearch.trim()) return;
+
+  try {
+    const token = await getToken();
+
+    const { data } = await axios.get(
+      `${backendUrl}/search?query=${debounceSearch}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setSearchResult(data.result);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  useEffect(() => {
+    getSearch();
+  }, [debounceSearch]);
+  
   return (
     <div>
       <header className="flex min-h-16 justify-between shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border py-3">
@@ -177,11 +179,13 @@ const Navbar = () => {
       {
         // Search Modal
         searchModal && (
-          <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-start justify-center pt-20"
-            onClick={() => setSearchModal(false)}
-          >
-            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] overflow-hidden">
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 dark:bg-black/70 z-10 "
+              onClick={() => setSearchModal(false)}
+            />
+
+            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] mx-auto overflow-hidden fixed left-1/2 top-20 -translate-x-1/2 z-20">
               {/* Search Header */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
@@ -192,7 +196,7 @@ const Navbar = () => {
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleChange}
                     placeholder="Search tasks, categories, or keywords..."
                     className="flex-1 py-2 text-lg outline-none bg-transparent"
                   />
@@ -245,23 +249,9 @@ const Navbar = () => {
                           <h3 className="text-sm font-semibold text-card-foreground">
                             Results
                           </h3>
-                          <div className="flex gap-2">
-                            <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
-                              All (24)
-                            </span>
-                            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
-                              Tasks (18)
-                            </span>
-                            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
-                              Categories (4)
-                            </span>
-                            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-full">
-                              Tags (2)
-                            </span>
-                          </div>
                         </div>
                         <div className="space-y-3">
-                          {sampleTasks.map((task) => (
+                          {searchResult?.map((task) => (
                             <div
                               key={task.id}
                               className="p-3 border border-border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 cursor-pointer transition-all"
@@ -289,7 +279,14 @@ const Navbar = () => {
                                       {task.category}
                                     </span>
                                     <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                      <FiCalendar /> {task.date}
+                                      <FiCalendar />{" "}
+                                      {new Date(
+                                        task.dueDate,
+                                      ).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
                                     </span>
                                   </div>
                                 </div>
@@ -297,66 +294,6 @@ const Navbar = () => {
                               </div>
                             </div>
                           ))}
-
-                          <div className="p-3 border-l-2 border-purple-400 dark:border-purple-600 bg-purple-50/50 dark:bg-purple-900/30 rounded-lg">
-                            <div className="flex items-start gap-3">
-                              <div className="mt-0.5">
-                                <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center">
-                                  <svg
-                                    className="w-2.5 h-2.5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="3"
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium text-card-foreground text-sm">
-                                  Read 20 Pages
-                                </h4>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Atomic Habits by James Clear
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                                    Low
-                                  </span>
-                                  <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded flex items-center gap-1">
-                                    <FiBook /> Study
-                                  </span>
-                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <FiCalendar /> Jun 17, 2026
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-3 border border-border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 cursor-pointer transition-all">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                                  <FiBook className="text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-card-foreground text-sm">
-                                    Study
-                                  </h4>
-                                  <p className="text-xs text-muted-foreground">
-                                    Category • 5 tasks
-                                  </p>
-                                </div>
-                              </div>
-                              <RiArrowUpLine className="text-muted-foreground" />
-                            </div>
-                          </div>
                         </div>
                       </div>
                     )}
@@ -446,12 +383,8 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </>
         )
-      }
-
-      {
-        isOpen && <AddNewTask/>
       }
     </div>
   );
