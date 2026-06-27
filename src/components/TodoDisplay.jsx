@@ -4,8 +4,9 @@ import AllTasks from "./AllTasks";
 import { Search } from "lucide-react";
 import FilterDropdown from "./FilterDropDown";
 import useDebounce from "@/hooks/useDebounce";
+import { useTodo } from "@/context/TodoContext";
 
-const TodoDisplay = ({ fetch, tasks, setTasks, setEditingTask, setIsOpen }) => {
+const TodoDisplay = () => {
   const [filters, setFilters] = useState({
     status: "All Status",
     priority: "All Priority",
@@ -14,7 +15,9 @@ const TodoDisplay = ({ fetch, tasks, setTasks, setEditingTask, setIsOpen }) => {
   });
 
   const [openDropdown, setOpenDropdown] = useState(null);
-
+const {
+  tasks
+} = useTodo();
   const statusOptions = ["All Status", "pending", "completed"];
   const priorityOptions = ["All Priority", "low", "medium", "high"];
   const categoryOptions = [
@@ -111,11 +114,7 @@ const debouncedSearch = useDebounce(search, 500);
 
       <div>
         <AllTasks
-          fetch={fetch}
-          setTasks={setTasks}
           tasks={filteredTasks}
-          setEditingTask={setEditingTask}
-          setIsOpen={setIsOpen}
         />
       </div>
     </div>

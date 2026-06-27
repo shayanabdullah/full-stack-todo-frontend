@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { RiCloseLine, RiLoader4Line } from "react-icons/ri";
 import toast from "react-hot-toast";
 import { ShowToast } from "@/utils/ShowToast";
+import { useTodo } from "@/context/TodoContext";
 
-const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
+const AddNewTask = () => {
   const [taskData, setTaskData] = useState({
     title: "",
     description: "",
@@ -17,22 +18,9 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!isOpen) return null;
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const { setIsOpen, fetchTodos, setTasks, editingTask, isLoaded, setEditingTask } = useTodo();
 
-  const validateField = (name, value) => {
-    let error = "";
-    if (name === "title" && !value.trim()) {
-      error = "Task title is required";
-    }
-    if (name === "description" && !value.trim()) {
-      error = "Description is required";
-    }
-    if (name === "dueDate" && !value) {
-      error = "Due date is required";
-    }
-    return error;
-  };
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,93 +38,76 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
     }
   };
 
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const error = validateField(name, value);
-    if (error) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: error,
-      }));
-    }
-  };
-
-  const { getToken, isLoaded } = useAuth();
+  const { getToken } = useAuth();
 
   const handleAdd = async () => {
-    const newErrors = {};
-    ["title", "description", "dueDate"].forEach((field) => {
-      const error = validateField(field, taskData[field]);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     if (!isLoaded) return;
-  const token = await getToken();
+    const token = await getToken();
 
-  if (editingTask) {
-    const res = await axios.post(
-      `${backendUrl}/task/edit/${editingTask._id}`,
-      taskData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    if (editingTask) {
+      const res = await axios.post(
+        `${backendUrl}/task/edit/${editingTask._id}`,
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      }
-    );
+      );
 
-    if (res.data.success) {
-      setTasks((prev) =>
-        prev.map((task) =>
-          task._id === editingTask._id
-            ? res.data.todo
-            : task
-        ))
+      if (res.data.success) {
+        setIsLoading(false);
+
+        setTasks((prev) =>
+          prev.map((task) =>
+            task._id === editingTask._id ? res.data.todo : task,
+          ),
+        );
+        setIsOpen(false)
+        setEditingTask(false)
         toast.custom((t) => (
-  <ShowToast
-    t={t}
-    type="success"
-    title="Task Updated"
-    message="Your changes have been saved successfully."
-  />
-));
+          <ShowToast
+            t={t}
+            type="success"
+            title="Task Updated"
+            message="Your changes have been saved successfully."
+          />
+        ));
+      }
+
+          if(!res.data.success){
+       setErrors(res.data)
+      setIsLoading(false)
     }
-  } else {
-    const res = await axios.post(
-      `${backendUrl}/create/todo`,
-      taskData,
-      {
+    
+    } else {
+      const res = await axios.post(`${backendUrl}/create/todo`, taskData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      });
+      if (!res.data.success) {
+        setErrors(res.data);
+        setIsLoading(false);
       }
-    );
 
-    if (res.data.success) {
-      setTasks((prev) => [res.data.todo, ...prev]);
+      if (res.data.success) {
+        setTasks((prev) => [res.data.todo, ...prev]);
+        await fetchTodos();
+        setIsOpen(false);
+        toast.custom((t) => (
+          <ShowToast
+            t={t}
+            type="success"
+            title="Task Created"
+            message="Your new task has been added successfully."
+          />
+        ));
+      }
     }
-  }
-  
-
-  await fetch();
-  setIsOpen(false);
-  toast.custom((t) => (
-  <ShowToast
-    t={t}
-    type="success"
-    title="Task Created"
-    message="Your new task has been added successfully."
-  />
-));
   };
 
   const handleClose = () => {
@@ -154,17 +125,17 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
   };
 
   useEffect(() => {
-  if (editingTask) {
-    setTaskData({
-      title: editingTask.title,
-      description: editingTask.description,
-      priority: editingTask.priority,
-      dueDate: editingTask.dueDate?.split("T")[0],
-      category: editingTask.category,
-      status: editingTask.status,
-    });
-  }
-}, [editingTask]);
+    if (editingTask) {
+      setTaskData({
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+        dueDate: editingTask.dueDate?.split("T")[0],
+        category: editingTask.category,
+        status: editingTask.status,
+      });
+    }
+  }, [editingTask]);
 
   return (
     <>
@@ -207,20 +178,19 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
                   type="text"
                   value={taskData.title}
                   onChange={handleChange}
-                  onBlur={handleBlur}
                   name="title"
                   id="title"
                   placeholder="Enter task title..."
                   disabled={isLoading}
                   className={`py-2.5 px-3 rounded-lg text-sm border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    errors.title
+                    errors.message
                       ? "border-destructive focus:ring-destructive/20"
                       : "border-input focus:ring-ring"
                   }`}
                 />
-                {errors.title && (
+                {errors.message && (
                   <p className="text-xs text-destructive mt-1">
-                    {errors.title}
+                    {errors.message}
                   </p>
                 )}
               </div>
@@ -261,7 +231,6 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
               <textarea
                 value={taskData.description}
                 onChange={handleChange}
-                onBlur={handleBlur}
                 name="description"
                 id="description"
                 rows="3"
@@ -269,14 +238,14 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
                 placeholder="Add task description..."
                 disabled={isLoading}
                 className={`py-2.5 px-3 rounded-lg text-sm border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                  errors.description
+                  errors.message
                     ? "border-destructive focus:ring-destructive/20"
                     : "border-input focus:ring-ring"
                 }`}
               />
-              {errors.description && (
+              {errors.message && (
                 <p className="text-xs text-destructive mt-1">
-                  {errors.description}
+                  {errors.message}
                 </p>
               )}
             </div>
@@ -339,19 +308,18 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
                   id="dueDate"
                   value={taskData.dueDate}
                   onChange={handleChange}
-                  onBlur={handleBlur}
                   name="dueDate"
                   disabled={isLoading}
                   className={`w-full py-2.5 px-3 rounded-lg border bg-background text-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    errors.dueDate
+                    errors.message
                       ? "border-destructive focus:ring-destructive/20"
                       : "border-input focus:ring-ring"
                   }`}
                 />
               </div>
-              {errors.dueDate && (
+              {errors.message && (
                 <p className="text-xs text-destructive mt-1">
-                  {errors.dueDate}
+                  {errors.message}
                 </p>
               )}
             </div>
@@ -374,10 +342,12 @@ const AddNewTask = ({ isOpen, setIsOpen, fetch, setTasks, editingTask }) => {
               {isLoading ? (
                 <>
                   <RiLoader4Line className="animate-spin" />
-                 { editingTask ? "Updating Task ..." : "Creating Task..."}
+                  {editingTask ? "Updating Task ..." : "Creating Task..."}
                 </>
+              ) : editingTask ? (
+                "Update Task"
               ) : (
-               editingTask ? "Update Task" : "Create Task"
+                "Create Task"
               )}
             </button>
           </div>

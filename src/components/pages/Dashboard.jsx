@@ -14,22 +14,21 @@ import AddNewTask from "../AddNewTask";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import AreaChartComp from "../AreaChart";
+import { useTodo } from "@/context/TodoContext";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
 const Dashboard = () => {
   const [date, setDate] = useState(new Date());
-  const [isOpen, setIsOpen] = useState(false);
-  const [statsData, setStatsData] = useState({
-    totalTasks: 0,
-    completedTasks: 0,
-    highPriorityTasks: 0,
-    todayTasks: 0,
-    growth: 0,
-  });
-  const [tasks, setTasks] = useState([]);
-  const [editingTask, setEditingTask] = useState(null);
-  const [weeklyData, setWeeklyData] = useState([]);
-
+    const {
+     weeklyData,
+        isOpen,
+        setIsOpen,
+        tasks,
+        setEditingTask,
+        statsData,
+        fetchTodos,
+        getAllTask,
+        isLoaded
+  } = useTodo()
 
   const stats = [
     {
@@ -66,34 +65,12 @@ const Dashboard = () => {
     },
   ];
 
-  const { getToken, isLoaded } = useAuth();
 
-  const fetchTodos = async () => {
-    const token = await getToken();
-
-    const res = await axios.get(`${backendUrl}/dashboard`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    setStatsData(res?.data?.stats);
-setWeeklyData(res.data.weeklyData);
-  };
-
-  const getAllTask = async () => {
-    const token = await getToken();
-
-    const res = await axios.get(`${backendUrl}/all/todos`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    setTasks(res.data.todos);
-  };
   const { user } = useUser();
 
   const name = user?.username || "User";
+
+
 
   useEffect(() => {
     if (isLoaded) {
@@ -173,13 +150,7 @@ setWeeklyData(res.data.weeklyData);
 
           {/* Todo Display */}
           <div className="mt-12">
-            <TodoDisplay
-              tasks={tasks}
-              setTasks={setTasks}
-              fetch={fetchTodos}
-              setEditingTask={setEditingTask}
-              setIsOpen={setIsOpen}
-            />
+            <TodoDisplay/>
           </div>
         </div>
 
@@ -212,13 +183,7 @@ setWeeklyData(res.data.weeklyData);
         </div>
       </div>
       {isOpen && (
-        <AddNewTask
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          fetch={fetchTodos}
-          setTasks={setTasks}
-          editingTask={editingTask}
-        />
+        <AddNewTask  />
       )}
     </div>
   );

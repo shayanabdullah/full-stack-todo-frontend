@@ -4,10 +4,11 @@
   import { useAuth } from "@clerk/clerk-react";
   import toast from "react-hot-toast";
   import { ShowToast } from "@/utils/ShowToast";
+import { useTodo } from "@/context/TodoContext";
 
-  const AllTasks = ({ tasks, setTasks, fetch, setEditingTask, setIsOpen }) => {
+  const AllTasks = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
+const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
     const { getToken } = useAuth();
 
     const deleteTask = async (id) => {
@@ -22,7 +23,7 @@
 
         setTasks((prev) => prev.filter((task) => task._id !== id));
 
-        await fetch();
+        await fetchTodos();
         toast.custom((t) => (
           <ShowToast
             t={t}
@@ -58,7 +59,7 @@
   );
 
   try {
-    await axios.post(
+   const res = await axios.post(
       `${backendUrl}/task/edit/${task._id}`,
       {
         status: newStatus,
@@ -69,6 +70,21 @@
         },
       }
     );
+  toast.custom((t) => (
+  <ShowToast
+    t={t}
+    type={newStatus === "completed" ? "success" : "info"}
+    title={
+      newStatus === "completed"
+        ? "Task Completed"
+        : "Task Reopened"
+    }
+    message={
+      newStatus === "completed"
+        ? "Great job! The task has been marked as completed."
+        : "The task has been moved back to your to-do list."
+    }
+  />))
   } catch (error) {
     // rollback
     setTasks((prev) =>
