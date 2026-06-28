@@ -16,14 +16,16 @@ import { useTodo } from "@/context/TodoContext";
 import useDebounce from "@/hooks/useDebounce";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
+import SearchSkeleton from "./ui/SearchSkeleton";
 const Navbar = () => {
   const searchInputRef = useRef(null);
   const [searchModal, setSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchHistory, setSearchHistory] = useState([]);
   const [searchResult, setSearchResult] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
-  const { isOpen, setIsOpen, backendUrl } = useTodo();
+  const { isLoaded, setIsOpen, backendUrl } = useTodo();
 
   const quickActions = [
     {
@@ -56,13 +58,7 @@ const Navbar = () => {
     },
   ];
 
-  const recentSearches = [
-    "React assignment",
-    "Workout",
-    "Design system",
-    "Project meeting",
-    "Grocery shopping",
-  ];
+ 
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -102,14 +98,14 @@ const Navbar = () => {
   };
 
   const getCategoryIcon = (category) => {
-    switch (category) {
-      case "Personal":
+    switch (category.toLowerCase()) {
+      case "personal":
         return <FiUser />;
-      case "Work":
+      case "work":
         return <FiBook />;
-      case "Study":
+      case "study":
         return <FiBook />;
-      case "Health":
+      case "health":
         return <FiFlag />;
       default:
         return <FiUser />;
@@ -121,31 +117,73 @@ const Navbar = () => {
   };
   const debounceSearch = useDebounce(searchQuery);
 
-const getSearch = async () => {
-  if (!isLoaded || !debounceSearch.trim()) return;
+  const { getToken } = useAuth();
 
-  try {
-    const token = await getToken();
+  const saveSearchHistory = (query) => {
+    if (!query.trim()) return;
 
-    const { data } = await axios.get(
-      `${backendUrl}/search?query=${debounceSearch}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    let history = JSON.parse(localStorage.getItem("searchHistory")) || [];
+
+    // Remove duplicate
+    history = history.filter(
+      (item) => item.toLowerCase() !== query.toLowerCase(),
     );
 
-    setSearchResult(data.result);
-  } catch (err) {
-    console.log(err);
+    // Add newest to top
+    history.unshift(query);
+
+    // Keep only last 8 searches
+    history = history.slice(0, 8);
+
+    localStorage.setItem("searchHistory", JSON.stringify(history));
+    setSearchHistory(history);
+  };
+  const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+
+    saveSearchHistory(searchQuery);
+    getSearch()
   }
 };
 
+  const getSearch = async () => {
+    if (!isLoaded || !debounceSearch.trim()) return;
+
+    try {
+      setSearchLoading(true);
+      const token = await getToken();
+
+      const { data } = await axios.get(
+        `${backendUrl}/search?query=${debounceSearch}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setSearchResult(data.result);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+const clearHistory = () => {
+  localStorage.removeItem("searchHistory");
+  setSearchHistory([]);
+};
   useEffect(() => {
     getSearch();
   }, [debounceSearch]);
-  
+
+  useEffect(() => {
+    const history = JSON.parse(localStorage.getItem("searchHistory")) || [];
+
+    setSearchHistory(history);
+  }, []);
+
   return (
     <div>
       <header className="flex min-h-16 justify-between shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border py-3">
@@ -185,7 +223,7 @@ const getSearch = async () => {
               onClick={() => setSearchModal(false)}
             />
 
-            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh] mx-auto overflow-hidden fixed left-1/2 top-20 -translate-x-1/2 z-20">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh]  mx-auto overflow-hidden fixed left-1/2 top-20 -translate-x-1/2 z-20">
               {/* Search Header */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
@@ -197,6 +235,7 @@ const getSearch = async () => {
                     type="text"
                     value={searchQuery}
                     onChange={handleChange}
+                    onKeyDown={handleKeyDown}
                     placeholder="Search tasks, categories, or keywords..."
                     className="flex-1 py-2 text-lg outline-none bg-transparent"
                   />
@@ -215,42 +254,61 @@ const getSearch = async () => {
               </div>
 
               {/* Modal Body */}
-              <div className="p-4 overflow-y-auto max-h-[55vh]">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="p-4 overflow-y-auto max-h-[55vh] min-h-[25vh]">
+                <div
+                  className={` ${!searchQuery && "grid grid-cols-1 lg:grid-cols-2 gap-6"}`}
+                >
                   {/* Left Column - Recent Searches & Results */}
-                  <div>
+                  <div className="size-full relative">
                     {!searchQuery ? (
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="text-sm font-semibold text-card-foreground">
                             Recent Searches
                           </h3>
-                          <button className="text-xs text-muted-foreground hover:text-card-foreground">
+                          <button className="text-xs text-muted-foreground hover:text-card-foreground" onClick={clearHistory}>
                             Clear
                           </button>
                         </div>
                         <div className="space-y-1">
-                          {recentSearches.map((search, idx) => (
+                          {
+                            searchHistory.length === 0 ? (
+                               <div className="flex flex-col items-center justify-center py-20 text-center">
+                       
+                        <h3 className="mt-5 text-sm font-semibold text-foreground/80">
+                          No Search history
+                        </h3>
+
+                      
+                      </div>
+                            )
+                            : (
+                              searchHistory.map((item, idx) => (
                             <div
                               key={idx}
+                              onClick={() => setSearchQuery(item)}
                               className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-lg cursor-pointer"
                             >
                               <CiSearch className="text-muted-foreground" />
-                              <span className="text-sm text-card-foreground">
-                                {search}
-                              </span>
+                              <span className="text-sm">{item}</span>
                             </div>
-                          ))}
+                          ))
+                            )
+                          }
                         </div>
                       </div>
-                    ) : (
+                    ) : searchLoading ? (
+                      <div className="">
+                        <SearchSkeleton />
+                      </div>
+                    ) : searchResult.length > 0 ? (
                       <div>
                         <div className="flex items-center gap-4 mb-4">
                           <h3 className="text-sm font-semibold text-card-foreground">
                             Results
                           </h3>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-3 ">
                           {searchResult?.map((task) => (
                             <div
                               key={task.id}
@@ -295,6 +353,31 @@ const getSearch = async () => {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                          <CiSearch className="text-3xl text-muted-foreground" />
+                        </div>
+
+                        <h3 className="mt-5 text-xl font-semibold text-foreground">
+                          No results found
+                        </h3>
+
+                        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+                          We couldn't find any tasks matching{" "}
+                          <span className="font-medium text-foreground">
+                            "{searchQuery}"
+                          </span>
+                          . Try searching with a different keyword or category.
+                        </p>
+
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="mt-6 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm"
+                        >
+                          Clear Search
+                        </button>
                       </div>
                     )}
                   </div>
