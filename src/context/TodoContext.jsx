@@ -1,14 +1,13 @@
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const TodoContext = createContext();
-
 
 export const TodoProvider = ({ children }) => {
   const [weeklyData, setWeeklyData] = useState([]);
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [isOpen, setIsOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
@@ -20,10 +19,14 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
     growth: 0,
   });
 
+  const [taskModal, setTaskModal] = useState(false);
+  const [taskDetailId, setTaskDetailId] = useState();
+  const [deleteModal, setDeleteModal] = useState(false);
+
   const { getToken, isLoaded } = useAuth();
 
   const fetchTodos = async () => {
-    if(!isLoaded) return;
+    if (!isLoaded) return;
     const token = await getToken();
 
     const res = await axios.get(`${backendUrl}/dashboard`, {
@@ -47,10 +50,14 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
     setTasks(res.data.todos);
   };
 
-
+  useEffect(() => {
+    getAllTask();
+    fetchTodos();
+  }, []);
 
   return (
-    <TodoContext.Provider value={{
+    <TodoContext.Provider
+      value={{
         weeklyData,
         isOpen,
         setIsOpen,
@@ -58,15 +65,23 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
         setTasks,
         editingTask,
         setEditingTask,
-        statsData,setStatsData,
+        statsData,
+        setStatsData,
         fetchTodos,
         getAllTask,
         isLoaded,
-        backendUrl
-    }}>
-        {children}
+        backendUrl,
+        taskModal,
+        setTaskModal,
+        taskDetailId,
+        setTaskDetailId,
+        deleteModal,
+        setDeleteModal
+      }}
+    >
+      {children}
     </TodoContext.Provider>
-  )
+  );
 };
 
-export const useTodo = () => useContext(TodoContext)
+export const useTodo = () => useContext(TodoContext);

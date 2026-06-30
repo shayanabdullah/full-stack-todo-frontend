@@ -17,6 +17,8 @@ import useDebounce from "@/hooks/useDebounce";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import SearchSkeleton from "./ui/SearchSkeleton";
+import TaskDetailModal from './TaskDetails';
+import DeleteTaskModal from "./ui/DeleteTaskModal";
 const Navbar = () => {
   const searchInputRef = useRef(null);
   const [searchModal, setSearchModal] = useState(false);
@@ -24,8 +26,7 @@ const Navbar = () => {
   const [searchHistory, setSearchHistory] = useState([]);
   const [searchResult, setSearchResult] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-
-  const { isLoaded, setIsOpen, backendUrl } = useTodo();
+  const { isLoaded, setIsOpen, backendUrl, setTaskModal, taskModal,  setTaskDetailId, deleteModal } = useTodo();
 
   const quickActions = [
     {
@@ -138,6 +139,12 @@ const Navbar = () => {
     localStorage.setItem("searchHistory", JSON.stringify(history));
     setSearchHistory(history);
   };
+const handleTaskDetail = (task) => {
+  setSearchModal(false);
+  setTaskDetailId(task._id)
+  setTaskModal(true);
+}
+
   const handleKeyDown = (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -166,8 +173,8 @@ const Navbar = () => {
       setSearchResult(data.result);
     } catch (err) {
       console.log(err);
-    } finally {
-      setSearchLoading(false);
+    } finally { 
+      setSearchLoading(false)
     }
   };
 const clearHistory = () => {
@@ -219,11 +226,11 @@ const clearHistory = () => {
         searchModal && (
           <>
             <div
-              className="fixed inset-0 bg-black/50 dark:bg-black/70 z-10 "
+              className="fixed inset-0 bg-black/50 dark:bg-black/70 z-30 "
               onClick={() => setSearchModal(false)}
             />
 
-            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh]  mx-auto overflow-hidden fixed left-1/2 top-20 -translate-x-1/2 z-20">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-4xl max-h-[70vh]  mx-auto overflow-hidden fixed left-1/2 top-20 -translate-x-1/2 z-40">
               {/* Search Header */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
@@ -311,7 +318,8 @@ const clearHistory = () => {
                         <div className="space-y-3 ">
                           {searchResult?.map((task) => (
                             <div
-                              key={task.id}
+                              key={task._id}
+                              onClick={()=> handleTaskDetail(task)}
                               className="p-3 border border-border rounded-lg hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/30 dark:hover:bg-purple-900/20 cursor-pointer transition-all"
                             >
                               <div className="flex items-start gap-3">
@@ -469,6 +477,9 @@ const clearHistory = () => {
           </>
         )
       }
+
+     {taskModal && <TaskDetailModal />}
+  {deleteModal && <DeleteTaskModal />}
     </div>
   );
 };

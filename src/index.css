@@ -245,3 +245,7 @@ button{
 .animate-custom-leave {
   animation: custom-leave 0.2s ease forwards;
 }
+
+body{
+  user-select: none;
+}

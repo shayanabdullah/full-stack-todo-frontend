@@ -114,7 +114,7 @@ const debouncedSearch = useDebounce(search, 500);
 
       <div>
         <AllTasks
-          tasks={filteredTasks}
+          filteredTask={filteredTasks}
         />
       </div>
     </div>

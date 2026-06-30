@@ -8,7 +8,7 @@ import { useTodo } from "@/context/TodoContext";
 
   const AllTasks = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
+const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen,} = useTodo()
     const { getToken } = useAuth();
 
     const deleteTask = async (id) => {
@@ -41,18 +41,18 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
     const completedTasks = tasks.filter((task) => task.status === "completed");
 
 
-    const toggleTaskStatus = async (task) => {
+    const toggleTaskStatus = async (toggoleTask) => {
   const token = await getToken();
 
   const newStatus =
-    task.status === "pending"
+    toggoleTask.status === "pending"
       ? "completed"
       : "pending";
 
   // Optimistic update
   setTasks((prev) =>
     prev.map((t) =>
-      t._id === task._id
+      t._id === toggoleTask._id
         ? { ...t, status: newStatus }
         : t
     )
@@ -60,7 +60,7 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
 
   try {
    const res = await axios.post(
-      `${backendUrl}/task/edit/${task._id}`,
+      `${backendUrl}/task/edit/${toggoleTask._id}`,
       {
         status: newStatus,
       },
@@ -89,15 +89,15 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
     // rollback
     setTasks((prev) =>
       prev.map((t) =>
-        t._id === task._id
-          ? { ...t, status: task.status }
+        t._id === toggoleTask._id
+          ? { ...t, status: toggoleTask.status }
           : t
       )
     );
   }
 };
     return (
-      <div>
+      <div className=" scrollbar-[1px] scrollbar-thumb-accent scrollbar-track-transparent">
         {tasks.length <= 0 ? (
           <div className="text-center py-10 capitalize w-full flex flex-col justify-center items-center h-[50vh]">
             <h3 className="text-lg font-semibold">No tasks yet!</h3>
@@ -106,11 +106,11 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
             </p>
           </div>
         ) : (
-          <div className="main grid grid-cols-1 md:grid-cols-2 gap-x-8">
+          <div className="main grid grid-cols-1 md:grid-cols-2 gap-x-8 h-[calc(100vh-150px)]">
             {/* Todo List */}
-            <div className="w-full p-4 rounded-xl border bg-card shadow-sm min-h-[40vh]">
+            <div className="w-full  rounded-xl border bg-card shadow-sm min-h-[40vh] overflow-y-auto">
               {/* header */}
-              <div className="pb-4 flex items-center gap-x-2">
+              <div className="p-4 flex items-center gap-x-2 shrink-0 border-b sticky top-0 bg-card z-10">
                 <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" />
                 <span className="text-lg font-bold">Todo List</span>
                 <span className="bg-sky-200 w-6 h-6 text-sm flex items-center justify-center rounded-full text-sky-700 font-semibold">
@@ -118,7 +118,7 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
                 </span>
               </div>
               {/* All Tasks */}
-              <div className="flex flex-col gap-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4  ">
                 {pendingTasks.map((task) => (
                   <TaskCard
                     key={task._id}
@@ -150,17 +150,17 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
             </div>
 
             {/* Completed Tasks */}
-            <div className="w-full p-4 rounded-xl border bg-card shadow-sm ">
+             <div className="w-full  rounded-xl border bg-card shadow-sm min-h-[40vh] overflow-y-auto">
               {/* header */}
-              <div className="pb-4 flex items-center gap-x-2">
+              <div className="p-4 flex items-center gap-x-2 shrink-0 border-b sticky top-0 bg-card z-10">
                 <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse" />
-                <span className="text-lg font-bold">Completed</span>
+                <span className="text-lg font-bold">Completed List</span>
                 <span className="bg-green-200 w-6 h-6 text-sm flex items-center justify-center rounded-full text-green-700 font-semibold">
                   {completedTasks.length}
                 </span>
               </div>
-              {/* Completed Tasks List */}
-              <div className="flex flex-col gap-y-3">
+              {/* All Tasks */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4  ">
                 {completedTasks.map((task) => (
                   <TaskCard
                     key={task._id}
@@ -175,16 +175,16 @@ const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen} = useTodo()
                     status={task.status}
                     priority={task.priority}
                     category={task.category}
-                    onToggle={() => toggleTaskStatus(task)}
                     date={new Date(task.dueDate).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
+                    onToggle={() => toggleTaskStatus(task)}
                   />
                 ))}
               </div>
-              {completedTasks.length === 0 && (
+                {completedTasks.length === 0 && (
                 <div className="text-center w-full h-full flex items-start justify-center text-lg text-gray-500 pt-20">
                   No completed tasks yet.
                 </div>
