@@ -1,9 +1,13 @@
 import React from "react";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 import { useTodo } from "@/context/TodoContext";
+import { useAuth } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
+import { ShowToast } from "@/utils/ShowToast";
+import axios from "axios";
 
 const DeleteTaskModal = ({}) => {
-  const { tasks, taskDetailId, deleteModal, setDeleteModal,  } = useTodo();
+  const { tasks, taskDetailId, setDeleteModal,backendUrl, setTasks, fetchTodos  } = useTodo();
 
   const task= tasks.find((t) => t._id === taskDetailId);
   const taskTitle = task?.title || "Task"
@@ -12,10 +16,36 @@ const DeleteTaskModal = ({}) => {
     setDeleteModal(false)
   }
 
-  const onConfirm = () => {
-  onClose()
+  const {getToken} = useAuth()
+
+
+  const onConfirm = async () => {
+     try {
+        const token = await getToken();
+
+        await axios.delete(`${backendUrl}/delete/task/${task._id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setTasks((prev) => prev.filter((task) => task._id !== taskDetailId));
+
+        await fetchTodos();
+        onClose()
+        toast.custom((t) => (
+          <ShowToast
+            t={t}
+            type="error"
+            title="Task Deleted"
+            message="The task has been removed."
+          />
+        ));
+      } catch (error) {
+        console.log(error);
+      }
   }
-  const handleDelete = () => {}
+
 
   return (
     <>
@@ -37,7 +67,7 @@ const DeleteTaskModal = ({}) => {
               </div>
 
               <div>
-                <button className="text-lg font-bold" onClick={handleDelete}>Delete Task</button>
+                <h2 className="text-lg font-bold">Delete Task</h2>
 
                 <p className="text-sm text-muted-foreground">
                   This action cannot be undone.

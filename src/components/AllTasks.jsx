@@ -8,33 +8,12 @@ import { useTodo } from "@/context/TodoContext";
 
   const AllTasks = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen,} = useTodo()
+const {tasks, setTasks, fetchTodos, setEditingTask, setIsOpen, setDeleteModal, setTaskDetailId} = useTodo()
     const { getToken } = useAuth();
 
-    const deleteTask = async (id) => {
-      try {
-        const token = await getToken();
-
-        await axios.delete(`${backendUrl}/delete/task/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setTasks((prev) => prev.filter((task) => task._id !== id));
-
-        await fetchTodos();
-        toast.custom((t) => (
-          <ShowToast
-            t={t}
-            type="error"
-            title="Task Deleted"
-            message="The task has been removed."
-          />
-        ));
-      } catch (error) {
-        console.log(error);
-      }
+    const deleteTask =  (id) => {
+  setTaskDetailId(id)
+  setDeleteModal(true);
     };
 
     const pendingTasks = tasks.filter((task) => task.status === "pending");

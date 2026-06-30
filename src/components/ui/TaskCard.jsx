@@ -155,7 +155,7 @@ const TaskCard = ({
           </button>
 
           {isMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 w-40 bg-background border rounded-lg shadow-xl z-50">
+            <div className="absolute top-full right-0 mt-2 w-40 bg-background border rounded-lg shadow-xl z-30">
               <div className="p-1">
                 <button
                   onClick={() => {
