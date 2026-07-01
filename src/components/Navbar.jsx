@@ -125,15 +125,12 @@ const Navbar = () => {
 
     let history = JSON.parse(localStorage.getItem("searchHistory")) || [];
 
-    // Remove duplicate
     history = history.filter(
       (item) => item.toLowerCase() !== query.toLowerCase(),
     );
 
-    // Add newest to top
     history.unshift(query);
 
-    // Keep only last 8 searches
     history = history.slice(0, 8);
 
     localStorage.setItem("searchHistory", JSON.stringify(history));
@@ -162,7 +159,7 @@ const handleTaskDetail = (task) => {
       const token = await getToken();
 
       const { data } = await axios.get(
-        `${backendUrl}/search?query=${debounceSearch}`,
+       `${backendUrl}/tasks?search=${debounceSearch}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -170,7 +167,7 @@ const handleTaskDetail = (task) => {
         },
       );
 
-      setSearchResult(data.result);
+      setSearchResult(data.tasks);
     } catch (err) {
       console.log(err);
     } finally { 
@@ -184,6 +181,7 @@ const clearHistory = () => {
   useEffect(() => {
     getSearch();
   }, [debounceSearch]);
+  
 
   useEffect(() => {
     const history = JSON.parse(localStorage.getItem("searchHistory")) || [];

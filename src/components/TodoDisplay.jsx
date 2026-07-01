@@ -1,23 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AllTasks from "./AllTasks";
 
 import { Search } from "lucide-react";
 import FilterDropdown from "./FilterDropDown";
 import useDebounce from "@/hooks/useDebounce";
 import { useTodo } from "@/context/TodoContext";
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 
 const TodoDisplay = () => {
-  const [filters, setFilters] = useState({
-    status: "All Status",
-    priority: "All Priority",
-    category: "All Category",
-    search: "",
-  });
-
   const [openDropdown, setOpenDropdown] = useState(null);
-const {
-  tasks
-} = useTodo();
+  const { filters, setFilters, fetchFilteredTasks } = useTodo();
+
+  const { status, priority, category, search } = filters;
   const statusOptions = ["All Status", "pending", "completed"];
   const priorityOptions = ["All Priority", "low", "medium", "high"];
   const categoryOptions = [
@@ -27,10 +22,6 @@ const {
     "Study",
     "Health",
   ];
-  
-  const { status, priority, category, search } = filters;
-  
-const debouncedSearch = useDebounce(search, 500);
 
   const selectOption = (key, value) => {
     setFilters((prev) => ({
@@ -40,25 +31,17 @@ const debouncedSearch = useDebounce(search, 500);
     setOpenDropdown(null);
   };
 
+  const debouncedSearch = useDebounce(search)
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const matchStatus = status === "All Status" || task.status === status;
 
-      const matchPriority =
-        priority === "All Priority" || task.priority === priority;
-
-      const matchCategory =
-        category === "All Category" ||
-        task.category.toLowerCase() === category.toLowerCase();
-
-      const matchSearch = task.title
-        .toLowerCase()
-        .includes(debouncedSearch.toLowerCase());
-
-      return matchStatus && matchPriority && matchCategory && matchSearch;
-    });
-  }, [tasks, filters, debouncedSearch]);
+useEffect(() => {
+  fetchFilteredTasks({
+    status,
+    priority,
+    category,
+    search: debouncedSearch,
+  });
+}, [status, priority, category, debouncedSearch]);
 
   return (
     <div className="space-y-4">
@@ -113,9 +96,7 @@ const debouncedSearch = useDebounce(search, 500);
       </div>
 
       <div>
-        <AllTasks
-          filteredTask={filteredTasks}
-        />
+        <AllTasks  />
       </div>
     </div>
   );

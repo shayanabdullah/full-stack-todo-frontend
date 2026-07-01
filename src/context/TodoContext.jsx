@@ -1,3 +1,4 @@
+import useDebounce from "@/hooks/useDebounce";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -19,10 +20,17 @@ export const TodoProvider = ({ children }) => {
     growth: 0,
   });
 
+    const [filters, setFilters] = useState({
+      status: "All Status",
+      priority: "All Priority",
+      category: "All Category",
+      search: "",
+    });
   const [taskModal, setTaskModal] = useState(false);
   const [taskDetailId, setTaskDetailId] = useState();
   const [deleteModal, setDeleteModal] = useState(false);
 
+  const { status, priority, category, search } = filters;
   const { getToken, isLoaded } = useAuth();
 
   const fetchTodos = async () => {
@@ -49,9 +57,37 @@ export const TodoProvider = ({ children }) => {
 
     setTasks(res.data.todos);
   };
+  
+
+const fetchFilteredTasks = async ({
+  status,
+  priority,
+  category,
+  search,
+}) => {
+  const token = await getToken();
+
+  
+  const params = {};
+
+  if (search) params.search = search;
+  if (status !== "All Status") params.status = status.toLowerCase();
+  if (priority !== "All Priority") params.priority = priority.toLowerCase();
+  if (category !== "All Category") {
+  params.category = category.toLowerCase();
+}
+
+  const res = await axios.get(`${backendUrl}/tasks`, {
+    params,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  setTasks(res.data.tasks);
+};
 
   useEffect(() => {
-    getAllTask();
     fetchTodos();
   }, []);
 
@@ -76,7 +112,10 @@ export const TodoProvider = ({ children }) => {
         taskDetailId,
         setTaskDetailId,
         deleteModal,
-        setDeleteModal
+        setDeleteModal,
+        fetchFilteredTasks,
+          filters,
+    setFilters,
       }}
     >
       {children}
